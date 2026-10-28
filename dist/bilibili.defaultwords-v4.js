@@ -1,0 +1,9 @@
+// Built at: 2026/10/28
+var GENERIC_PLACEHOLDER="搜索视频、番剧或up主",HIDDEN_FIELDS=new Set([4,7,8,9]);
+function readVarint(e,t){let n=0,r=0,o=t;for(;o<e.length&&r<35;){let t=e[o++];if(n+=(t&127)*2**r,!(128&t))return[n,o];r+=7}return null}
+function writeVarint(e){let t=[];do{let n=e%128;e=Math.floor(e/128),e>0&&(n|=128),t.push(n)}while(e>0);return t}
+function writeUint32BE(e){return[e>>>24&255,e>>>16&255,e>>>8&255,255&e]}
+function skipField(e,t,n){if(0===n)return readVarint(e,t)?.[1]??null;if(1===n)return t+8<=e.length?t+8:null;if(2===n){let n=readVarint(e,t);if(!n)return null;let r=n[1]+n[0];return r<=e.length?r:null}return 5===n?t+4<=e.length?t+4:null:null}
+function rewriteMessage(e){let t=[],n=0,r=!1,o=!1;for(;n<e.length;){let i=readVarint(e,n);if(!i)return null;let a=Math.floor(i[0]/8),s=i[0]%8,l=n,c=skipField(e,i[1],s);if(null===c)return null;if(2===s&&3===a){o=!0;let e=new TextEncoder().encode(GENERIC_PLACEHOLDER);t.push(...writeVarint(26),...writeVarint(e.length),...e),r=!0}else 2!==s||HIDDEN_FIELDS.has(a)?(2===s&&(4===a||7===a||8===a||9===a)&&(o=!0),5===a&&0===s&&(o=!0)):t.push(...e.slice(l,c));n=c}if(!o)return null;if(!r){let e=new TextEncoder().encode(GENERIC_PLACEHOLDER);t.push(...writeVarint(26),...writeVarint(e.length),...e)}return new Uint8Array(t)}
+function rewriteGrpcBody(e){let t=[],n=0;for(;n<e.length;){if(n+5>e.length)return null;let r=e[n],o=new DataView(e.buffer,e.byteOffset+n+1,4).getUint32(0),i=n+5,a=i+o;if(0!==r||a>e.length)return null;let s=rewriteMessage(e.slice(i,a));if(!s)return null;t.push(r,...writeUint32BE(s.length),...s),n=a}return new Uint8Array(t)}
+let response=$response,body=response.bodyBytes??(response.body instanceof Uint8Array?response.body:void 0),done=$done;if(!body)done({});else{let rewritten=rewriteGrpcBody(body);rewritten?done({bodyBytes:rewritten}):done({})}
