@@ -1,11 +1,11 @@
 name: Auto Update IPTV (Smart Schedule)
 
-on:
-  schedule:
+#on:
+  #schedule:
     # 每4小时运行一次 (UTC时间: 0, 4, 8, 12)
     # 对应北京时间: 08, 12, 16, 20 点
-    - cron: '0 0,4,8,12 * * *'
-  workflow_dispatch:
+    #- cron: '0 0,4,8,12 * * *'
+  #workflow_dispatch:
 
 permissions:
   contents: write
